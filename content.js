@@ -29,33 +29,68 @@ function setupMapInteraction() {
   const style = document.createElement('style');
   style.textContent = `
     .spotfinder-controls {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: white;
-      padding: 10px;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 18px;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+      backdrop-filter: blur(12px);
       z-index: 1000;
-      font-family: Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      min-width: 280px;
+      cursor: move;
+      user-select: none;
+      transition: box-shadow 0.2s ease;
+    }
+    .spotfinder-controls input,
+    .spotfinder-controls input:hover,
+    .spotfinder-controls input:focus {
+      user-select: text !important;
+      cursor: text !important;
+      pointer-events: auto !important;
+    }
+    .spotfinder-section {
+      cursor: default;
+    }
+    .spotfinder-controls:hover {
+      box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+    }
+    .spotfinder-controls.dragging {
+      box-shadow: 0 16px 48px rgba(0,0,0,0.25);
+      transform: rotate(1deg);
     }
     .spotfinder-btn {
       background: #1976d2;
       color: white;
       border: none;
-      padding: 8px 16px;
-      border-radius: 4px;
+      padding: 10px 16px;
+      border-radius: 8px;
       cursor: pointer;
-      margin: 2px;
+      margin: 3px;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(25, 118, 210, 0.2);
     }
     .spotfinder-btn:hover {
       background: #1565c0;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
+    }
+    .spotfinder-btn:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 8px rgba(25, 118, 210, 0.2);
     }
     .spotfinder-btn:disabled {
-      background: #ccc !important;
-      color: rgba(255, 255, 255, 0.5) !important;
+      background: #e0e0e0 !important;
+      color: rgba(0, 0, 0, 0.4) !important;
       cursor: not-allowed !important;
-      opacity: 0.6 !important;
+      opacity: 0.7 !important;
+      transform: none !important;
+      box-shadow: none !important;
     }
     .spotfinder-btn:not(:disabled) {
       background: #1976d2 !important;
@@ -63,38 +98,166 @@ function setupMapInteraction() {
       cursor: pointer !important;
       opacity: 1 !important;
     }
+    .spotfinder-input {
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 13px;
+      transition: all 0.2s ease;
+      background: white;
+      color: #333;
+      pointer-events: auto;
+      cursor: text;
+    }
+    .spotfinder-input:focus {
+      outline: none;
+      border-color: #1976d2;
+      box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.1);
+      background: white;
+    }
+    .spotfinder-section {
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    .spotfinder-section:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+    .spotfinder-title {
+      font-weight: 700;
+      font-size: 16px;
+      color: #1976d2;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .spotfinder-label {
+      font-weight: 600;
+      font-size: 13px;
+      color: #333;
+      margin-bottom: 6px;
+      display: block;
+    }
+    .spotfinder-checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .spotfinder-checkbox-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: #555;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-right: 12px;
+    }
+    .spotfinder-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+      cursor: move;
+    }
+    .spotfinder-header-controls {
+      display: flex;
+      gap: 4px;
+    }
+    .spotfinder-control-btn {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: bold;
+      transition: all 0.2s ease;
+    }
+    .spotfinder-minimize-btn {
+      background: #ffc107;
+      color: #333;
+    }
+    .spotfinder-minimize-btn:hover {
+      background: #ffb300;
+      transform: scale(1.1);
+    }
+    .spotfinder-controls.minimized .spotfinder-content {
+      display: none;
+    }
+    .spotfinder-controls.minimized {
+      min-width: auto;
+      width: auto;
+      padding: 10px 14px;
+    }
   `;
   document.head.appendChild(style);
 
   const controls = document.createElement('div');
   controls.className = 'spotfinder-controls';
   controls.innerHTML = `
-    <div style="margin-bottom: 5px;">
-      <strong>🎯 SpotFinder</strong>
+    <div class="spotfinder-header">
+      <div class="spotfinder-title">🎯 SpotFinder</div>
+      <div class="spotfinder-header-controls">
+        <button class="spotfinder-control-btn spotfinder-minimize-btn" id="spotfinder-minimize" title="Minimize/Maximize">−</button>
+      </div>
     </div>
-    <div style="margin-bottom: 8px;">
-      <input type="password" id="spotfinder-api-key" placeholder="Google Places API Key" style="width: 200px; padding: 4px; font-size: 12px; border: 1px solid #ccc; border-radius: 3px;">
-      <button id="spotfinder-save-key" class="spotfinder-btn" style="padding: 4px 8px; font-size: 12px;">Save</button>
+    
+    <div class="spotfinder-content">
+      <div class="spotfinder-section">
+        <div style="display: flex; gap: 6px; align-items: center; margin-bottom: 6px;">
+          <label class="spotfinder-label" style="margin: 0; white-space: nowrap;">API Key:</label>
+          <input type="password" id="spotfinder-api-key" placeholder="Google Places API Key" class="spotfinder-input" style="flex: 1;">
+          <a href="https://developers.google.com/maps/documentation/places/web-service/get-api-key" target="_blank" 
+             style="display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; 
+                    background: #1976d2; color: white; border-radius: 50%; text-decoration: none; font-size: 11px; 
+                    font-weight: bold; transition: all 0.2s ease;" 
+             title="How to get API key">?</a>
+          <button id="spotfinder-save-key" class="spotfinder-btn" style="padding: 6px 12px; font-size: 12px; white-space: nowrap;">Save</button>
+        </div>
+      </div>
+      
+      <div class="spotfinder-section">
+        <label class="spotfinder-label">Place Types:</label>
+        <div class="spotfinder-checkbox-group">
+          <label class="spotfinder-checkbox-label">
+            <input type="checkbox" id="filter-restaurant" checked> Restaurants
+          </label>
+          <label class="spotfinder-checkbox-label">
+            <input type="checkbox" id="filter-hotel" checked> Hotels
+          </label>
+          <label class="spotfinder-checkbox-label">
+            <input type="checkbox" id="filter-attractions" checked> Attractions
+          </label>
+        </div>
+      </div>
+      
+      <div class="spotfinder-section">
+        <div style="display: flex; gap: 6px; align-items: center; margin-bottom: 8px;">
+          <button id="spotfinder-use-center" class="spotfinder-btn">Use Map Center</button>
+          <label class="spotfinder-label" style="margin: 0; white-space: nowrap;">Radius:</label>
+          <input type="number" id="spotfinder-radius" min="100" max="50000" value="1000" 
+                 class="spotfinder-input" style="width: 80px;">
+          <span style="font-size: 12px; color: #666;">m</span>
+        </div>
+        <div style="display: flex; gap: 6px;">
+          <button id="spotfinder-search" class="spotfinder-btn" disabled style="flex: 1;">Search Places</button>
+          <button id="spotfinder-clear" class="spotfinder-btn">Clear</button>
+        </div>
+      </div>
+      
+      <div id="spotfinder-status" style="font-size: 12px; margin-top: 8px; color: #666; line-height: 1.4;">
+        Enter API key and click Use Map Center to start.
+      </div>
     </div>
-    <div style="margin-bottom: 8px;">
-      <strong>Place Types:</strong><br>
-      <label style="margin-right: 10px; font-size: 12px;">
-        <input type="checkbox" id="filter-restaurant" checked> Restaurants
-      </label>
-      <label style="margin-right: 10px; font-size: 12px;">
-        <input type="checkbox" id="filter-hotel" checked> Hotels
-      </label>
-      <label style="font-size: 12px;">
-        <input type="checkbox" id="filter-attractions" checked> Attractions
-      </label>
-    </div>
-    <div>
-      <button id="spotfinder-use-center" class="spotfinder-btn">Use Map Center</button>
-      <input type="number" id="spotfinder-radius" placeholder="Radius (m)" min="100" max="50000" value="1000" style="width: 80px; margin: 0 5px;">
-      <button id="spotfinder-search" class="spotfinder-btn" disabled>Search Places</button>
-      <button id="spotfinder-clear" class="spotfinder-btn">Clear</button>
-    </div>
-    <div id="spotfinder-status" style="font-size: 12px; margin-top: 5px; color: #666;">Enter API key and click Use Map Center to start.</div>
   `;
   
   document.body.appendChild(controls);
@@ -103,9 +266,79 @@ function setupMapInteraction() {
   document.getElementById('spotfinder-search').addEventListener('click', searchPlaces);
   document.getElementById('spotfinder-clear').addEventListener('click', clearSelection);
   document.getElementById('spotfinder-save-key').addEventListener('click', saveApiKey);
+  
+  // Add minimize functionality
+  document.getElementById('spotfinder-minimize').addEventListener('click', function() {
+    const controls = document.querySelector('.spotfinder-controls');
+    const button = this;
+    controls.classList.toggle('minimized');
+    button.textContent = controls.classList.contains('minimized') ? '+' : '−';
+  });
+
+  // Add drag functionality
+  makeDraggable(controls);
 
   setupRadiusUpdater();
   loadSavedApiKey();
+}
+
+// Drag functionality
+function makeDraggable(element) {
+  let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+  
+  function dragMouseDown(e) {
+    e = e || window.event;
+    
+    // Only allow dragging from header or when not clicking interactive elements
+    const target = e.target;
+    const interactiveElements = ['INPUT', 'BUTTON', 'A', 'LABEL', 'SELECT', 'TEXTAREA'];
+    
+    // Don't drag if clicking on interactive elements or their containers
+    if (interactiveElements.includes(target.tagName) || 
+        target.closest('input') || 
+        target.closest('button') || 
+        target.closest('a') ||
+        target.classList.contains('spotfinder-input') ||
+        target.id === 'spotfinder-radius' ||
+        target.id === 'spotfinder-api-key') {
+      return;
+    }
+    
+    e.preventDefault();
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+    document.onmouseup = closeDragElement;
+    document.onmousemove = elementDrag;
+    element.classList.add('dragging');
+  }
+  
+  function elementDrag(e) {
+    e = e || window.event;
+    e.preventDefault();
+    pos1 = pos3 - e.clientX;
+    pos2 = pos4 - e.clientY;
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+    
+    const newTop = element.offsetTop - pos2;
+    const newLeft = element.offsetLeft - pos1;
+    
+    // Keep element within viewport bounds
+    const maxTop = window.innerHeight - element.offsetHeight;
+    const maxLeft = window.innerWidth - element.offsetWidth;
+    
+    element.style.top = Math.max(0, Math.min(newTop, maxTop)) + "px";
+    element.style.left = Math.max(0, Math.min(newLeft, maxLeft)) + "px";
+    element.style.right = 'auto';
+  }
+  
+  function closeDragElement() {
+    document.onmouseup = null;
+    document.onmousemove = null;
+    element.classList.remove('dragging');
+  }
+  
+  element.addEventListener('mousedown', dragMouseDown);
 }
 
 
@@ -568,6 +801,8 @@ function searchPlaces() {
 let allResultsData = [];
 let currentPage = 0;
 const resultsPerPage = 10;
+let resultMarkers = []; // Store markers for current page results
+let markerUpdateInterval = null; // Interval for updating DOM marker positions
 
 function showResultsOnPage(places) {
   // Remove any existing results
@@ -594,33 +829,49 @@ function showResultsOnPage(places) {
 }
 
 function displayResultsPage() {
-  // Remove existing results content but keep container
-  let resultsDiv = document.getElementById('spotfinder-results');
-  if (resultsDiv) {
-    resultsDiv.remove();
+  // Store current position and state before removing
+  let storedPosition = { top: '120px', left: 'auto', right: '10px' };
+  let existingDiv = document.getElementById('spotfinder-results');
+  if (existingDiv) {
+    storedPosition = {
+      top: existingDiv.style.top || '120px',
+      left: existingDiv.style.left || 'auto', 
+      right: existingDiv.style.right || '10px'
+    };
+    existingDiv.remove();
   }
 
   const totalPages = Math.ceil(allResultsData.length / resultsPerPage);
   const startIndex = currentPage * resultsPerPage;
   const endIndex = startIndex + resultsPerPage;
   const currentPageResults = allResultsData.slice(startIndex, endIndex);
+  
+  // Clear existing result markers and add markers for current page
+  clearResultMarkers();
+  addMarkersForCurrentPage(currentPageResults, startIndex);
 
   // Create results container
   resultsDiv = document.createElement('div');
   resultsDiv.id = 'spotfinder-results';
   resultsDiv.style.cssText = `
     position: fixed;
-    top: 120px;
-    right: 10px;
+    top: ${storedPosition.top};
+    left: ${storedPosition.left};
+    right: ${storedPosition.right};
     width: 350px;
     max-height: 500px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    backdrop-filter: blur(12px);
     z-index: 1001;
-    font-family: Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     display: flex;
     flex-direction: column;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    cursor: move;
+    user-select: none;
+    transition: box-shadow 0.2s ease;
   `;
 
   const header = document.createElement('div');
@@ -628,16 +879,19 @@ function displayResultsPage() {
     background: #1976d2;
     color: white;
     padding: 12px;
-    border-radius: 8px 8px 0 0;
+    border-radius: 12px 12px 0 0;
     font-weight: bold;
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-shrink: 0;
+    cursor: move;
   `;
   header.innerHTML = `
     <span>🎯 ${allResultsData.length} Places (Page ${currentPage + 1}/${totalPages})</span>
-    <button id="close-results" style="background: none; border: none; color: white; cursor: pointer; font-size: 18px;">×</button>
+    <div style="display: flex; gap: 4px; align-items: center;">
+      <button id="close-results" style="background: none; border: none; color: white; cursor: pointer; font-size: 18px; width: 24px; height: 24px; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='rgba(255,255,255,0.2)'" onmouseout="this.style.backgroundColor='none'">×</button>
+    </div>
   `;
 
   const resultsContainer = document.createElement('div');
@@ -753,8 +1007,334 @@ function displayResultsPage() {
 
   // Close button handler
   document.getElementById('close-results').addEventListener('click', () => {
+    clearResultMarkers();
     resultsDiv.remove();
   });
+  
+  // Make results draggable
+  makeDraggable(resultsDiv);
+}
+
+function clearResultMarkers() {
+  console.log('SpotFinder: Clearing result markers:', resultMarkers.length);
+  
+  // Stop marker position updates
+  if (markerUpdateInterval) {
+    clearInterval(markerUpdateInterval);
+    markerUpdateInterval = null;
+  }
+  
+  // Clear Google Maps markers
+  resultMarkers.forEach(marker => {
+    if (marker && marker.setMap) {
+      marker.setMap(null);
+    } else if (marker && marker.element) {
+      marker.element.remove();
+    }
+  });
+  
+  // Clear DOM-based markers
+  document.querySelectorAll('[id^="spotfinder-result-marker-"]').forEach(marker => {
+    marker.remove();
+  });
+  
+  resultMarkers = [];
+}
+
+function addMarkersForCurrentPage(places, startIndex) {
+  if (!places || places.length === 0) return;
+  
+  console.log('SpotFinder: Adding markers for', places.length, 'places');
+  
+  // Try to get Google Maps instance first
+  const mapInstance = getGoogleMapInstance();
+  
+  if (mapInstance && window.google && window.google.maps) {
+    addGoogleMapsMarkers(places, startIndex, mapInstance);
+  } else {
+    addDOMMarkers(places, startIndex);
+  }
+}
+
+function addGoogleMapsMarkers(places, startIndex, mapInstance) {
+  console.log('SpotFinder: Adding Google Maps markers');
+  
+  places.forEach((place, index) => {
+    if (!place.geometry || !place.geometry.location) return;
+    
+    const globalIndex = startIndex + index;
+    const position = {
+      lat: place.geometry.location.lat,
+      lng: place.geometry.location.lng
+    };
+    
+    // Create custom marker with pin emoji and number
+    const marker = new google.maps.Marker({
+      position: position,
+      map: mapInstance,
+      title: `${globalIndex + 1}. ${place.name}`,
+      label: {
+        text: (globalIndex + 1).toString(),
+        color: 'white',
+        fontSize: '10px',
+        fontWeight: 'bold'
+      },
+      icon: {
+        url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+          <svg width="32" height="40" viewBox="0 0 32 40" xmlns="http://www.w3.org/2000/svg">
+            <!-- Number label -->
+            <rect x="8" y="2" width="16" height="12" rx="6" fill="#1976d2" stroke="#0d47a1" stroke-width="1"/>
+            <text x="16" y="10" text-anchor="middle" fill="white" font-family="Arial" font-size="8" font-weight="bold">${globalIndex + 1}</text>
+            <!-- Pin emoji approximation -->
+            <circle cx="16" cy="26" r="8" fill="#e53e3e"/>
+            <circle cx="16" cy="26" r="4" fill="white"/>
+          </svg>
+        `),
+        scaledSize: new google.maps.Size(32, 40),
+        anchor: new google.maps.Point(16, 40)
+      },
+      animation: google.maps.Animation.DROP,
+      zIndex: 1000 + globalIndex
+    });
+    
+    // Add info window
+    const infoWindow = new google.maps.InfoWindow({
+      content: `
+        <div style="font-family: Arial, sans-serif; max-width: 250px;">
+          <h3 style="margin: 0 0 8px 0; color: #1976d2; font-size: 16px;">${place.name}</h3>
+          <p style="margin: 0 0 8px 0; color: #666; font-size: 13px;">${place.vicinity || place.formatted_address || 'No address'}</p>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="color: #ff9800; font-size: 14px;">${place.rating ? '⭐'.repeat(Math.round(place.rating)) + ' ' + place.rating.toFixed(1) : 'No rating'}</span>
+            <span style="background: #e3f2fd; padding: 2px 8px; border-radius: 12px; font-size: 12px; color: #1976d2;">${place.user_ratings_total || 0} reviews</span>
+          </div>
+        </div>
+      `
+    });
+    
+    marker.addListener('click', () => {
+      // Close any open info windows
+      resultMarkers.forEach(m => {
+        if (m.infoWindow && m.infoWindow.close) {
+          m.infoWindow.close();
+        }
+      });
+      infoWindow.open(mapInstance, marker);
+    });
+    
+    marker.infoWindow = infoWindow;
+    resultMarkers.push(marker);
+  });
+  
+  console.log('SpotFinder: Added', resultMarkers.length, 'Google Maps markers');
+}
+
+function addDOMMarkers(places, startIndex) {
+  console.log('SpotFinder: Adding DOM-based markers with position tracking');
+  
+  places.forEach((place, index) => {
+    if (!place.geometry || !place.geometry.location) return;
+    
+    const globalIndex = startIndex + index;
+    const lat = place.geometry.location.lat;
+    const lng = place.geometry.location.lng;
+    
+    // Create DOM marker container
+    const markerContainer = document.createElement('div');
+    markerContainer.id = `spotfinder-result-marker-${globalIndex}`;
+    markerContainer.style.cssText = `
+      position: fixed;
+      transform: translate(-50%, -100%);
+      z-index: 9990;
+      cursor: pointer;
+      pointer-events: auto;
+      transition: left 0.1s ease, top 0.1s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    `;
+    markerContainer.title = `${globalIndex + 1}. ${place.name}`;
+    
+    // Create number label
+    const numberLabel = document.createElement('div');
+    numberLabel.style.cssText = `
+      background: #1976d2;
+      color: white;
+      font-weight: bold;
+      font-size: 10px;
+      font-family: Arial, sans-serif;
+      padding: 2px 6px;
+      border-radius: 8px;
+      margin-bottom: 2px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+      border: 1px solid #0d47a1;
+      min-width: 16px;
+      text-align: center;
+      line-height: 1.2;
+    `;
+    numberLabel.textContent = (globalIndex + 1).toString();
+    
+    // Create emoji marker
+    const emojiMarker = document.createElement('div');
+    emojiMarker.style.cssText = `
+      font-size: 20px;
+      line-height: 1;
+      filter: drop-shadow(0 1px 3px rgba(0,0,0,0.4));
+    `;
+    emojiMarker.textContent = '📍';
+    
+    markerContainer.appendChild(numberLabel);
+    markerContainer.appendChild(emojiMarker);
+    
+    const marker = markerContainer;
+    
+    // Add click handler
+    marker.addEventListener('click', () => {
+      const url = `https://www.google.com/maps/place/?q=place_id:${place.place_id}`;
+      window.open(url, '_blank');
+    });
+    
+    document.body.appendChild(marker);
+    
+    // Store marker with its geographic coordinates
+    resultMarkers.push({
+      element: marker,
+      place: place,
+      lat: lat,
+      lng: lng,
+      globalIndex: globalIndex
+    });
+    
+    // Set initial position
+    updateMarkerPosition({ element: marker, lat: lat, lng: lng });
+  });
+  
+  console.log('SpotFinder: Added', resultMarkers.length, 'DOM markers');
+  
+  // Start position updates for DOM markers
+  startMarkerPositionUpdates();
+}
+
+function latLngToScreenPosition(lat, lng) {
+  // This is a simplified conversion - works best when the search center is visible
+  if (!selectedCenter || !currentMapBounds) return null;
+  
+  const mapData = extractMapDataFromUrl();
+  const zoom = mapData?.zoom || currentMapBounds?.zoom || 14;
+  const centerLat = mapData?.lat || selectedCenter?.lat;
+  const centerLng = mapData?.lng || selectedCenter?.lng;
+  
+  if (!centerLat || !centerLng) return null;
+  
+  // Calculate pixel offset from center using Mercator projection
+  const latRadians = centerLat * Math.PI / 180;
+  
+  const earthCircumference = 40075016.686; // Earth's circumference in meters
+  const tileSize = 256;
+  const pixelsPerMeter = (tileSize * Math.pow(2, zoom)) / (earthCircumference * Math.cos(latRadians));
+  
+  // Calculate distance in meters
+  const latDiff = (lat - centerLat) * 111319.9; // degrees to meters (approximate)
+  const lngDiff = (lng - centerLng) * 111319.9 * Math.cos(latRadians);
+  
+  // Convert to pixels from center
+  const pixelX = lngDiff * pixelsPerMeter;
+  const pixelY = -latDiff * pixelsPerMeter; // negative because screen Y increases downward
+  
+  // Get screen center position
+  const screenCenterX = window.innerWidth / 2;
+  const screenCenterY = window.innerHeight / 2;
+  
+  return {
+    x: screenCenterX + pixelX,
+    y: screenCenterY + pixelY
+  };
+}
+
+function updateMarkerPosition(marker) {
+  if (!marker || !marker.element || !marker.lat || !marker.lng) return;
+  
+  // Try improved position calculation first, fallback to basic one
+  let screenPos = getImprovedScreenPosition(marker.lat, marker.lng);
+  if (!screenPos) {
+    screenPos = latLngToScreenPosition(marker.lat, marker.lng);
+  }
+  
+  if (screenPos) {
+    // Only update if the position is within reasonable bounds
+    if (screenPos.x >= -100 && screenPos.x <= window.innerWidth + 100 &&
+        screenPos.y >= -100 && screenPos.y <= window.innerHeight + 100) {
+      marker.element.style.left = `${screenPos.x}px`;
+      marker.element.style.top = `${screenPos.y}px`;
+      marker.element.style.display = 'flex';
+    } else {
+      // Hide markers that are too far off screen
+      marker.element.style.display = 'none';
+    }
+  }
+}
+
+function startMarkerPositionUpdates() {
+  // Stop any existing updates
+  if (markerUpdateInterval) {
+    clearInterval(markerUpdateInterval);
+  }
+  
+  console.log('SpotFinder: Starting marker position updates');
+  
+  // Update marker positions every 200ms
+  markerUpdateInterval = setInterval(() => {
+    const currentUrl = window.location.href;
+    
+    // Check if URL changed (indicating map movement/zoom)
+    if (currentUrl !== lastUrl) {
+      const newMapData = extractMapDataFromUrl();
+      if (newMapData) {
+        currentMapBounds = newMapData;
+        
+        // Update all DOM marker positions
+        resultMarkers.forEach(marker => {
+          if (marker.element && marker.lat && marker.lng) {
+            updateMarkerPosition(marker);
+          }
+        });
+      }
+      lastUrl = currentUrl;
+    }
+  }, 100);
+}
+
+function getImprovedScreenPosition(lat, lng) {
+  // Enhanced position calculation that's more accurate
+  const mapData = extractMapDataFromUrl();
+  if (!mapData) return null;
+  
+  const { lat: centerLat, lng: centerLng, zoom } = mapData;
+  
+  // Use more precise Mercator projection
+  const TILE_SIZE = 256;
+  
+  // Convert to radians
+  const centerLatRad = centerLat * Math.PI / 180;
+  const centerLngRad = centerLng * Math.PI / 180;
+  const pointLatRad = lat * Math.PI / 180;
+  const pointLngRad = lng * Math.PI / 180;
+  
+  // Calculate world coordinates
+  const scale = Math.pow(2, zoom);
+  const worldCenterX = TILE_SIZE * scale * (centerLngRad + Math.PI) / (2 * Math.PI);
+  const worldCenterY = TILE_SIZE * scale * (Math.PI - Math.log(Math.tan(Math.PI / 4 + centerLatRad / 2))) / (2 * Math.PI);
+  
+  const worldPointX = TILE_SIZE * scale * (pointLngRad + Math.PI) / (2 * Math.PI);
+  const worldPointY = TILE_SIZE * scale * (Math.PI - Math.log(Math.tan(Math.PI / 4 + pointLatRad / 2))) / (2 * Math.PI);
+  
+  // Convert to screen coordinates
+  const screenCenterX = window.innerWidth / 2;
+  const screenCenterY = window.innerHeight / 2;
+  
+  return {
+    x: screenCenterX + (worldPointX - worldCenterX),
+    y: screenCenterY + (worldPointY - worldCenterY)
+  };
 }
 
 function clearVisualIndicators() {
@@ -768,6 +1348,9 @@ function clearVisualIndicators() {
     radiusCircle.setMap(null);
     radiusCircle = null;
   }
+  
+  // Clear result markers
+  clearResultMarkers();
   
   // Clear DOM indicators
   const centerIndicator = document.getElementById('spotfinder-center-indicator');
