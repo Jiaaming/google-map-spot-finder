@@ -1,7 +1,7 @@
 # SpotFinder Chrome Extension
 
 A Chrome extension that helps you find and sort Google Places by review count within a specified radius on Google Maps.
-
+![Example](https://raw.githubusercontent.com/Jiaaming/blogImage/main/pic/20251012182040.png)
 ## Features
 
 - **Interactive Map Selection**: Click on Google Maps to select a center point
