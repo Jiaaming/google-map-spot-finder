@@ -15,7 +15,15 @@
   "content_scripts": [
     {
       "matches": ["https://maps.google.com/*", "https://www.google.com/maps/*"],
-      "js": ["content.js"],
+      "js": [
+        "js/modules/utils.js",
+        "js/modules/ui.js",
+        "js/modules/mapInteraction.js",
+        "js/modules/markers.js",
+        "js/modules/storage.js",
+        "js/modules/search.js",
+        "js/content.js"
+      ],
       "run_at": "document_end"
     }
   ],
