@@ -68,7 +68,10 @@ async function handlePlacesSearch(center, radius, filters, sendResponse) {
       }
     }
     
-    let places = Array.from(placeMap.values());
+    const places = Array.from(placeMap.values()).map((place) => ({
+      ...place,
+      photo_url: buildPhotoUrl(place, apiKey)
+    }));
     console.log(`Found ${places.length} unique places from ${results.length} searches`);
 
     // Sort places by user_ratings_total (number of reviews) in descending order
@@ -123,6 +126,20 @@ function showResultsInPopup(places) {
     action: 'displayResults',
     places: places
   });
+}
+
+function buildPhotoUrl(place, apiKey) {
+  if (!apiKey || !place || !place.photos || !place.photos.length) {
+    return null;
+  }
+
+  const reference = place.photos[0].photo_reference;
+  if (!reference) {
+    return null;
+  }
+
+  const maxWidth = Math.min(place.photos[0].width || 400, 800);
+  return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=${maxWidth}&photoreference=${encodeURIComponent(reference)}&key=${apiKey}`;
 }
 
 // Handle extension installation

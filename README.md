@@ -102,6 +102,3 @@ To modify or enhance the extension:
 3. Click the refresh icon for SpotFinder
 4. Test your changes
 
-## API Costs
-
-Google Places API has usage limits and costs. Monitor your usage in Google Cloud Console to avoid unexpected charges. The free tier includes a generous number of requests per month.

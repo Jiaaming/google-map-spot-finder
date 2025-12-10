@@ -417,7 +417,7 @@ class UIManager {
       top: ${storedPosition.top};
       left: ${storedPosition.left};
       right: ${storedPosition.right};
-      width: 350px;
+      width: 420px;
       max-height: 500px;
       background: rgba(255, 255, 255, 0.95);
       border-radius: 12px;
@@ -494,6 +494,10 @@ class UIManager {
         border-bottom: 1px solid #eee;
         cursor: pointer;
         transition: background 0.2s;
+        display: grid;
+        grid-template-columns: 110px 1fr;
+        gap: 12px;
+        align-items: center;
       `;
       placeDiv.addEventListener('mouseenter', () => placeDiv.style.background = '#f5f5f5');
       placeDiv.addEventListener('mouseleave', () => placeDiv.style.background = 'white');
@@ -501,13 +505,21 @@ class UIManager {
       const rating = place.rating ? place.rating.toFixed(1) : 'N/A';
       const reviewCount = place.user_ratings_total || 0;
       const stars = rating !== 'N/A' ? '⭐'.repeat(Math.round(place.rating)) : '';
+      const imageBlock = place.photo_url
+        ? `<img src="${place.photo_url}" alt="Preview of ${place.name}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; display: block;">`
+        : `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #999; font-size: 11px; background: linear-gradient(135deg, #f7f7f7 0%, #ededed 100%); border: 1px dashed #ddd;">No image</div>`;
 
       placeDiv.innerHTML = `
-        <div style="font-weight: bold; margin-bottom: 4px;">${globalIndex + 1}. ${place.name}</div>
-        <div style="font-size: 12px; color: #666; margin-bottom: 4px;">${place.vicinity || place.formatted_address || 'No address'}</div>
-        <div style="font-size: 14px;">
-          <span style="color: #ff9800;">${stars} ${rating}</span>
-          <span style="background: #e3f2fd; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 8px; color: #1976d2;">${reviewCount} reviews</span>
+        <div style="width: 110px; height: 78px; border-radius: 10px; overflow: hidden; background: #f8f9fa; border: 1px solid #eee; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
+          ${imageBlock}
+        </div>
+        <div>
+          <div style="font-weight: bold; margin-bottom: 4px;">${globalIndex + 1}. ${place.name}</div>
+          <div style="font-size: 12px; color: #666; margin-bottom: 6px;">${place.vicinity || place.formatted_address || 'No address'}</div>
+          <div style="font-size: 14px;">
+            <span style="color: #ff9800;">${stars} ${rating}</span>
+            <span style="background: #e3f2fd; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 8px; color: #1976d2;">${reviewCount} reviews</span>
+          </div>
         </div>
       `;
 
